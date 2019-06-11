@@ -1,7 +1,8 @@
 'use strict';
+/*global $*/
 
-const apiKey = 'your_api_key_here';
-const searchURL = 'https://newsapi.org/v2/everything';
+const apiKey = 'CA0sUYQLbxxRRGToSTGCy7BIaRlZpDAZl5xLEBab';
+const searchURL = 'https://developer.nps.gov/api/v1/parks?api_key=CA0sUYQLbxxRRGToSTGCy7BIaRlZpDAZl5xLEBab';
 
 /**
  * Creates a query string from a params object
@@ -15,30 +16,32 @@ function formatQueryParams(params) {
 }
 
 /**
- * Performs the fetch call to get news
+ * Performs the fetch call to get parks
  * @param {string} query 
- * @param {number} maxResults 
+ * @param {number} limit 
  */
-function getNews(query, maxResults=10) {
+function getParks(query, limit) {
   const params = {
-    q: query,
+    stateCode: query,
     language: 'en',
+    limit:limit-1,
   };
   const queryString = formatQueryParams(params);
-  const url = searchURL + '?' + queryString;
+  const url = searchURL + '&' + queryString;
+  
 
-  const options = {
-    headers: new Headers({'X-Api-Key': apiKey})
-  };
+  //   const options = {
+  //     headers: new Headers({'X-Api-Key': apiKey})
+  //   };
 
-  fetch(url, options)
+  fetch(url)
     .then(response => {
       if (response.ok) {
         return response.json();
       }
       throw new Error(response.statusText);
     })
-    .then(responseJson => displayResults(responseJson, maxResults))
+    .then(responseJson => displayResults(responseJson, limit))
     .catch(err => {
       $('#js-error-message').text(`Something went wrong: ${err.message}`);
     });
@@ -47,27 +50,24 @@ function getNews(query, maxResults=10) {
 /**
  * Appends formatted HTML results to the page
  * @param {object} responseJson 
- * @param {number} maxResults 
+ * @param {number} limit
  */ 
-function displayResults(responseJson, maxResults) {
+function displayResults(responseJson, limit) {
   console.log('responseJson: ',responseJson);
   // clear the error message
   $('#js-error-message').empty();
   // if there are previous results, remove them
   $('#results-list').empty();
-  // iterate through the articles array, stopping at the max number of results
-  responseJson.articles.forEach(article => {
-    // For each object in the articles array:
+  // iterate through the parks array, stopping at the max number of results
+  responseJson.data.forEach(park => {
+    // For each object in the parks array:
     // Add a list item to the results list with 
-    // the article title, source, author,
-    // description, and image
+    // the park full name, 
+    // description, Web URL
     $('#results-list').append(
       `
-        <li><h3><a href="${article.url}">${article.title}</a></h3>
-        <p>${article.source.name}</p>
-        <p>By ${article.author}</p>
-        <p>${article.description}</p>
-        <img src='${article.urlToImage}'>
+        <li><h3><a href="${park.url}">${park.name}</a></h3>
+        <p>${park.description}</p>
         </li>
       `
     );
@@ -83,8 +83,8 @@ function watchForm() {
   $('form').submit(event => {
     event.preventDefault();
     const searchTerm = $('#js-search-term').val();
-    const maxResults = $('#js-max-results').val();
-    getNews(searchTerm, maxResults);
+    const limit = $('#js-max-results').val();
+    getParks(searchTerm, limit);
   });
 }
 
